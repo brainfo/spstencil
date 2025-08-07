@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spstencil"
+version = "0.1.0"
+description = "Subset, split, and aggregate h5ad files"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "spstencil" }]
+dependencies = [
+  "anndata>=0.10",
+  "pandas>=2.0",
+  "numpy>=1.23",
+]
+
+[project.scripts]
+spstencil = "spstencil.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
