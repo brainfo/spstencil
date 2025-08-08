@@ -11,6 +11,182 @@ import logging
 import sys
 
 
+def _prep(seq: Iterable[int]) -> List[int]:
+    """Helper - deduplicate and sort once."""
+    return sorted(set(seq))
+
+
+def is_continuous(seq: Iterable[int]) -> bool:
+    """Check if sequence has no gaps."""
+    nums = _prep(seq)
+    return all(b == a + 1 for a, b in zip(nums, nums[1:]))
+
+
+def missing_ranges(seq: Iterable[int]) -> List[Tuple[int, int]]:
+    """Find gaps in sequence as (start, end) tuples (exclusive end)."""
+    nums = _prep(seq)
+    gaps: List[Tuple[int, int]] = []
+    for a, b in zip(nums, nums[1:]):
+        if b > a + 1:
+            gaps.append((a + 1, b))
+    return gaps
+
+
+def determine_crop_bounds(
+    spatial: Dict[str, np.ndarray], 
+    bin_size: int = 100,
+    default_bounds: Optional[Dict[str, Tuple[int, int]]] = None
+) -> Dict[str, Tuple[int, int]]:
+    """Determine cropping bounds based on gaps in spatial data.
+    
+    Args:
+        spatial: Dict with 'x' and 'y' coordinate arrays
+        bin_size: Binning size for gap detection
+        default_bounds: Default bounds to use if no gaps near edges
+        
+    Returns:
+        Dict with 'x' and 'y' bounds as (min, max) tuples
+    """
+    bounds = {}
+    
+    for axis in ['x', 'y']:
+        coords = spatial[axis]
+        binned = coords // bin_size
+        
+        if is_continuous(binned):
+            # No gaps, use original bounds or defaults
+            if default_bounds and axis in default_bounds:
+                bounds[axis] = default_bounds[axis]
+            else:
+                bounds[axis] = (int(coords.min()), int(coords.max()))
+        else:
+            # Find gaps and determine crop bounds
+            gaps = missing_ranges(binned)
+            coord_min, coord_max = int(coords.min()), int(coords.max())
+            max_bin = coord_max // bin_size
+            
+            # Check if gaps are near the maximum coordinate
+            crop_min = coord_min
+            crop_max = coord_max
+            
+            for gap_start, gap_end in gaps:
+                # If gap is close to max coordinate, crop at gap start
+                if gap_end >= max_bin * 0.8:  # Gap near end (80% threshold)
+                    crop_max = gap_start * bin_size
+                    break
+            
+            bounds[axis] = (crop_min, crop_max)
+    
+    return bounds
+
+
+def crop_spatial_data(
+    adata: ad.AnnData,
+    bounds: Dict[str, Tuple[int, int]]
+) -> ad.AnnData:
+    """Crop spatial data based on coordinate bounds.
+    
+    Args:
+        adata: AnnData object with spatial coordinates
+        bounds: Dict with 'x' and 'y' bounds as (min, max) tuples
+        
+    Returns:
+        Cropped AnnData object
+    """
+    coords = get_spatial_coords(adata)
+    
+    # Create mask for spots within bounds
+    mask = np.ones(len(coords), dtype=bool)
+    
+    if 'x' in bounds:
+        x_min, x_max = bounds['x']
+        mask &= (coords[:, 0] >= x_min) & (coords[:, 0] <= x_max)
+    
+    if 'y' in bounds:
+        y_min, y_max = bounds['y']
+        mask &= (coords[:, 1] >= y_min) & (coords[:, 1] <= y_max)
+    
+    return adata[mask].copy()
+
+
+def crop_cell_data(
+    cell_hdf5_path: str | Path,
+    bounds: Dict[str, Tuple[int, int]],
+    output_path: str | Path
+) -> int:
+    """Crop cell HDF5 data based on coordinate bounds.
+    
+    Args:
+        cell_hdf5_path: Path to cell HDF5 file
+        bounds: Dict with 'x' and 'y' bounds as (min, max) tuples  
+        output_path: Path for output cropped HDF5 file
+        
+    Returns:
+        Number of cells kept after cropping
+    """
+    preds, coords = load_cell_predictions(cell_hdf5_path)
+    
+    # Create mask for cells within bounds
+    mask = np.ones(len(coords), dtype=bool)
+    
+    if 'x' in bounds:
+        x_min, x_max = bounds['x']
+        mask &= (coords[:, 0] >= x_min) & (coords[:, 0] <= x_max)
+    
+    if 'y' in bounds:
+        y_min, y_max = bounds['y']
+        mask &= (coords[:, 1] >= y_min) & (coords[:, 1] <= y_max)
+    
+    # Save cropped data
+    with h5py.File(str(output_path), 'w') as f:
+        f.create_dataset('predictions', data=preds[mask])
+        f.create_dataset('coords', data=coords[mask])
+    
+    return int(mask.sum())
+
+
+def crop_tissue_data(
+    tissue_tsv_path: str | Path,
+    bounds: Dict[str, Tuple[int, int]],
+    output_path: str | Path,
+    bin_size: int = 100
+) -> int:
+    """Crop tissue TSV data based on coordinate bounds.
+    
+    Args:
+        tissue_tsv_path: Path to tissue TSV file
+        bounds: Dict with 'x' and 'y' bounds as (min, max) tuples
+        output_path: Path for output cropped TSV file
+        bin_size: Bin size used for coordinate conversion
+        
+    Returns:
+        Number of tissue tiles kept after cropping
+    """
+    tissue_df = load_tissue_predictions(tissue_tsv_path)
+    
+    # Convert tile indices to pixel coordinates for comparison
+    tissue_df = tissue_df.copy()
+    tissue_df['x_pixel'] = tissue_df['x'] * bin_size
+    tissue_df['y_pixel'] = tissue_df['y'] * bin_size
+    
+    # Create mask for tissue tiles within bounds
+    mask = np.ones(len(tissue_df), dtype=bool)
+    
+    if 'x' in bounds:
+        x_min, x_max = bounds['x']
+        mask &= (tissue_df['x_pixel'] >= x_min) & (tissue_df['x_pixel'] <= x_max)
+    
+    if 'y' in bounds:
+        y_min, y_max = bounds['y']
+        mask &= (tissue_df['y_pixel'] >= y_min) & (tissue_df['y_pixel'] <= y_max)
+    
+    # Save cropped tissue data (original x,y tile indices)
+    tissue_cropped = tissue_df[mask][['x', 'y', 'class']].copy()
+    tissue_cropped.to_csv(output_path, sep='\t', index=False)
+    
+    return int(mask.sum())
+
+
 def load_cell_predictions(hdf5_path: str | Path) -> Tuple[np.ndarray, np.ndarray]:
     """Read predictions and coords arrays from an HDF5 produced by cell classifier.
 

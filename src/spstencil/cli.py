@@ -17,8 +17,13 @@ from .st import (
     split_st_by_tissue,
     validate_coordinate_compatibility,
     get_spatial_coords,
+    determine_crop_bounds,
+    crop_spatial_data,
+    crop_cell_data,
+    crop_tissue_data,
+    is_continuous,
+    missing_ranges,
 )
-
 
 def cmd_h5_subset(args: argparse.Namespace) -> None:
     import numpy as _np
@@ -71,7 +76,6 @@ def cmd_st_subset(args: argparse.Namespace) -> None:
     save_anndata(sub, args.output)
     logger.info(f"Subset complete: {sub.n_obs} spots retained from {adata.n_obs} original spots")
 
-
 def cmd_st_split(args: argparse.Namespace) -> None:
     adata = load_anndata(args.st_h5ad)
     tissue = load_tissue_predictions(args.tissue_tsv)
@@ -80,9 +84,6 @@ def cmd_st_split(args: argparse.Namespace) -> None:
     for label, sub in parts.items():
         safe = str(label).replace("/", "_")
         save_anndata(sub, args.out_dir / f"{safe}.h5ad")
-
-
-
 
 def cmd_h5_split(args: argparse.Namespace) -> None:
     parts = split_hdf5_by_tissue(args.cell_hdf5, args.tissue_tsv, swap_axes=args.swap_axes)
@@ -156,6 +157,65 @@ def cmd_st_aggregate(args: argparse.Namespace) -> None:
         print(f"Aggregated to {adata_agg.n_obs} cell classes with {adata_agg.n_vars} genes", file=sys.stderr)
         print("Use --output to save the aggregated AnnData object", file=sys.stderr)
 
+def cmd_st_crop(args: argparse.Namespace) -> None:
+    # Set up logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logger = logging.getLogger(__name__)
+    
+    # Load data
+    adata = load_anndata(args.st_h5ad)
+    coords = get_spatial_coords(adata)
+    
+    # Create spatial dict
+    spatial = {'x': coords[:, 0], 'y': coords[:, 1]}
+    
+    # Determine crop bounds
+    bounds = determine_crop_bounds(spatial, bin_size=args.bin_size)
+    
+    # Report gaps found
+    for axis in ['x', 'y']:
+        binned = spatial[axis] // args.bin_size
+        if not is_continuous(binned):
+            gaps = missing_ranges(binned)
+            logger.info(f"{axis.upper()} axis gaps found at bins: {gaps}")
+            logger.info(f"Cropping {axis} from {spatial[axis].min():.0f} to {bounds[axis][1]}")
+        else:
+            logger.info(f"{axis.upper()} axis is continuous, no cropping needed")
+    
+    # Apply cropping to spatial data
+    adata_cropped = crop_spatial_data(adata, bounds)
+    
+    # Save spatial result
+    if args.output:
+        st_output = args.output
+    else:
+        st_output = args.st_h5ad.with_name(args.st_h5ad.stem + "_crop.h5ad")
+    
+    st_output.parent.mkdir(parents=True, exist_ok=True)
+    save_anndata(adata_cropped, st_output)
+    logger.info(f"Cropped ST data from {adata.n_obs} to {adata_cropped.n_obs} spots -> {st_output}")
+    
+    # Synchronously crop cell HDF5 if provided
+    if args.cell_hdf5:
+        if args.cell_output:
+            cell_output = args.cell_output
+        else:
+            cell_output = args.cell_hdf5.with_name(args.cell_hdf5.stem + "_crop" + args.cell_hdf5.suffix)
+        
+        cell_output.parent.mkdir(parents=True, exist_ok=True)
+        n_cells_kept = crop_cell_data(args.cell_hdf5, bounds, cell_output)
+        logger.info(f"Cropped cell data -> {cell_output} ({n_cells_kept} cells kept)")
+    
+    # Synchronously crop tissue TSV if provided
+    if args.tissue_tsv:
+        if args.tissue_output:
+            tissue_output = args.tissue_output
+        else:
+            tissue_output = args.tissue_tsv.with_name(args.tissue_tsv.stem + "_crop" + args.tissue_tsv.suffix)
+        
+        tissue_output.parent.mkdir(parents=True, exist_ok=True)
+        n_tiles_kept = crop_tissue_data(args.tissue_tsv, bounds, tissue_output, args.bin_size)
+        logger.info(f"Cropped tissue data -> {tissue_output} ({n_tiles_kept} tiles kept)")
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="spstencil", description="Spatial transcriptomics tools for subsetting, splitting, and aggregating data")
@@ -212,15 +272,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_h5_subset.add_argument("--out-idx", type=Path, required=True, help="Output kept indices as .npy")
     p_h5_subset.set_defaults(func=cmd_h5_subset)
 
-    return p
+    p_st_crop = sub.add_parser("st-crop", help="Crop spatial data based on detected gaps")
+    p_st_crop.add_argument("st_h5ad", type=Path, help="ST AnnData .h5ad file with spatial coordinates")
+    p_st_crop.add_argument("--bin-size", type=int, default=100, help="Binning size for gap detection (default: 100)")
+    p_st_crop.add_argument("--output", type=Path, help="Output cropped .h5ad file (default: input_crop.h5ad)")
+    p_st_crop.add_argument("--cell-hdf5", type=Path, help="Cell HDF5 file to crop synchronously")
+    p_st_crop.add_argument("--cell-output", type=Path, help="Output cell HDF5 file (default: cell_crop.hdf5)")
+    p_st_crop.add_argument("--tissue-tsv", type=Path, help="Tissue TSV file to crop synchronously")
+    p_st_crop.add_argument("--tissue-output", type=Path, help="Output tissue TSV file (default: tissue_crop.tsv)")
+    p_st_crop.set_defaults(func=cmd_st_crop)
 
+    return p
 
 def main(argv: List[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
     args.func(args)
 
-
 if __name__ == "__main__":
     main()
-
