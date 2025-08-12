@@ -62,6 +62,34 @@ Split cell indices by tissue type.
 spstencil h5-split cells.hdf5 tissue.tsv --out-dir indices/
 ```
 
+### tif axes assert
+
+- Convert a directory in-place with metadata checks:
+    ```bash
+    python -m spstencil._utils.cyx2yxc /path/to/dir
+    ```
+
+- Force convert (assume CYX) when metadata is absent/incorrect:
+    ```bash
+    python -m spstencil._utils.cyx2yxc /path/to/dir /path/to/out --force
+    ```
+- API
+    ```python
+    from spstencil._utils.axes import imread_yxc
+    from spstencil._utils.cyx2yxc import convert_cyx_dir_to_yxc
+
+    # Always-load as YXC using metadata (raises if ambiguous unless force=True)
+    img = imread_yxc("/path/to/he.tif", force=False)
+
+    # Offline conversion (respects metadata; force assumes CYX when missing)
+    num = convert_cyx_dir_to_yxc(
+        input_dir=Path("/path/to/dir"),
+        output_dir=Path("/path/to/out"),
+        workers=8,
+        force=False,
+    )
+    ```
+
 ## File Formats
 
 - **ST .h5ad**: AnnData with spatial coordinates in `obsm['spatial']`
