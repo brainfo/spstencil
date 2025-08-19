@@ -13,6 +13,8 @@ dependencies = [
   "anndata>=0.10",
   "pandas>=2.0",
   "numpy>=1.23",
+  "h5py>=3.8",
+  "tifffile>=2023.7.10",
 ]
 
 [project.scripts]
@@ -23,4 +25,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+
 

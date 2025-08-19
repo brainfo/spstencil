@@ -1,0 +1,27 @@
+site_name: spstencil
+site_description: API reference for spstencil
+repo_url: https://github.com/brainfo/spstencil
+docs_dir: docs
+theme:
+  name: mkdocs
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_root_toc_entry: false
+            show_object_full_path: false
+            show_category_heading: true
+            members_order: alphabetical
+            filters:
+              - "!^_"
+            heading_level: 2
+
+nav:
+  - API: index.md
+
+

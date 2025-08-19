@@ -102,3 +102,7 @@ spstencil h5-split cells.hdf5 tissue.tsv --out-dir indices/
 - `--swap-axes`: Handle swapped coordinate systems
 - `--no-normalize`: Skip expression normalization
 
+## API Docs
+
+Simple API reference is published with GitHub Pages using MkDocs and mkdocstrings. After pushing to `main`, the site will be built and deployed automatically. Visit the repository Pages URL to view. The API is modeled after the Scanpy API index [`scanpy.readthedocs.io`](https://scanpy.readthedocs.io/en/stable/api/index.html).
+
