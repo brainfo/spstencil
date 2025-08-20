@@ -9,7 +9,7 @@ pip install -e .
 ```
 ### API docs
 
-[docs](brainfo.github.io/spstencil)
+[docs](https://brainfo.github.io/spstencil/)
 
 ## Commands
 
