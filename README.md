@@ -7,6 +7,9 @@ Spatial transcriptomics tools for subsetting, splitting, aggregating, and croppi
 ```bash
 pip install -e .
 ```
+### API docs
+
+[docs](brainfo.github.io/spstencil)
 
 ## Commands
 
@@ -73,22 +76,6 @@ spstencil h5-split cells.hdf5 tissue.tsv --out-dir indices/
     ```bash
     python -m spstencil._utils.cyx2yxc /path/to/dir /path/to/out --force
     ```
-- API
-    ```python
-    from spstencil._utils.axes import imread_yxc
-    from spstencil._utils.cyx2yxc import convert_cyx_dir_to_yxc
-
-    # Always-load as YXC using metadata (raises if ambiguous unless force=True)
-    img = imread_yxc("/path/to/he.tif", force=False)
-
-    # Offline conversion (respects metadata; force assumes CYX when missing)
-    num = convert_cyx_dir_to_yxc(
-        input_dir=Path("/path/to/dir"),
-        output_dir=Path("/path/to/out"),
-        workers=8,
-        force=False,
-    )
-    ```
 
 ## File Formats
 
@@ -102,7 +89,4 @@ spstencil h5-split cells.hdf5 tissue.tsv --out-dir indices/
 - `--swap-axes`: Handle swapped coordinate systems
 - `--no-normalize`: Skip expression normalization
 
-## API Docs
-
-Simple API reference is published with GitHub Pages using MkDocs and mkdocstrings. After pushing to `main`, the site will be built and deployed automatically. Visit the repository Pages URL to view. The API is modeled after the Scanpy API index [`scanpy.readthedocs.io`](https://scanpy.readthedocs.io/en/stable/api/index.html).
 
