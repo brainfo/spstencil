@@ -7,7 +7,7 @@ Spatial transcriptomics tools for subsetting, splitting, aggregating, and croppi
 ```bash
 pip install -e .
 ```
-### API docs
+## API docs
 
 [docs](https://brainfo.github.io/spstencil/)
 
@@ -65,28 +65,15 @@ Split cell indices by tissue type.
 spstencil h5-split cells.hdf5 tissue.tsv --out-dir indices/
 ```
 
-### tif axes assert
-
-- Convert a directory in-place with metadata checks:
-    ```bash
-    python -m spstencil._utils.cyx2yxc /path/to/dir
-    ```
-
-- Force convert (assume CYX) when metadata is absent/incorrect:
-    ```bash
-    python -m spstencil._utils.cyx2yxc /path/to/dir /path/to/out --force
-    ```
-
-## File Formats
-
-- **ST .h5ad**: AnnData with spatial coordinates in `obsm['spatial']`
-- **Cell .hdf5**: Contains `predictions` and `coords` datasets  
-- **Tissue .tsv**: Tab-separated with columns `x`, `y`, `class`
-
-## Options
+### Options
 
 - `--bin-size`: Coordinate binning for gap detection (default: 100)
 - `--swap-axes`: Handle swapped coordinate systems
 - `--no-normalize`: Skip expression normalization
 
+## File Formats
+
+- **st .h5ad**: AnnData with spatial coordinates in `obsm['spatial']`
+- **cell .hdf5**: Contains `predictions` and `coords` datasets  
+- **tissue .tsv**: Tab-separated with columns `x`, `y`, `class`
 
