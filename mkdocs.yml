@@ -24,7 +24,7 @@ plugins:
             heading_level: 3
 
 nav:
-  # - API: index.md
+  - API: index.md
   - Commands: commands.md
 
 
