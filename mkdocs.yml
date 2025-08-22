@@ -4,6 +4,8 @@ repo_url: https://github.com/brainfo/spstencil
 docs_dir: docs
 theme:
   name: mkdocs
+extra_css:
+  - styles.css
 
 plugins:
   - search
@@ -12,14 +14,14 @@ plugins:
         python:
           options:
             docstring_style: google
-            show_root_heading: true
+            show_root_heading: false
             show_root_toc_entry: false
             show_object_full_path: false
-            show_category_heading: true
+            show_category_heading: false
             members_order: alphabetical
             filters:
               - "!^_"
-            heading_level: 2
+            heading_level: 3
 
 nav:
   - API: index.md

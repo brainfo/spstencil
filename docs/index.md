@@ -85,6 +85,49 @@ bounds = sps.st.determine_crop_bounds(spatial, bin_size=100)
 adata_crop = sps.st.crop_spatial_data(adata, bounds)
 ```
 
+### Projection and Unroll
+
+- **What**: Project 2D points onto an arbitrary polyline/curve and aggregate expression along a normalized 0–1 axis.
+- **Key functions**:
+  - `project_points_onto_polyline(points, polyline, *, use_kdtree=True, kdtree_k=64, use_grid=False, grid_cell_size=None)`
+  - `extract_polyline_from_image(path, threshold=64, invert=False, step=1)`
+  - `unroll_adata_along_polyline(adata, polyline, *, coord_keys=("imagecol","imagerow"), features=None, layer=None, n_bins=50, agg="mean", distance_max=None)`
+  - `unroll_sdata(sdata, points_key, line_key, *, table_key=None, features=None, layer=None, n_bins=50, agg="mean", distance_max=None)`  
+    (optional integration with SpatialData; see [SpatialData](https://github.com/scverse/spatialdata))
+
+- **Examples**:
+```python
+import numpy as np
+import spstencil as sps
+
+# 1) Project arbitrary points onto a sine-wave polyline
+x = np.linspace(-500, 500, 1000)
+polyline = np.stack([x, np.sin(x/20.0)], axis=1)
+pts = np.random.uniform([-500, polyline[:,1].min()], [500, polyline[:,1].max()], size=(2000, 2))
+res = sps.project_points_onto_polyline(pts, polyline, use_kdtree=True, kdtree_k=64)
+# res.normalized_positions in [0,1], res.projected_points are closest points on the polyline
+
+# 2) Extract a polyline from a thin-curve ROI image
+poly_from_img = sps.extract_polyline_from_image("testdata/roi.jpg", threshold=64, step=5)
+
+# 3) Unroll AnnData expression along a curve
+agg_df, mapping_df = sps.unroll_adata_along_polyline(
+    adata,
+    poly_from_img,
+    coord_keys=("imagecol", "imagerow"),
+    features=["Car1", "Retnlb", "Prdx6"],
+    n_bins=50,
+    agg="mean",
+    distance_max=250.0,
+)
+
+# 4) SpatialData adapter (if using SpatialData objects)
+# agg_df, mapping_df = sps.unroll_sdata(
+#     sdata, points_key="spots", line_key="roi_line", table_key="table",
+#     features=["Car1", "Retnlb", "Prdx6"], n_bins=50
+# )
+```
+
 ### Utilities
 
 ::: spstencil._utils.axes

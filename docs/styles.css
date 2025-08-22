@@ -1,0 +1,31 @@
+/* Tweak mkdocstrings aesthetics: reduce block heading sizes and spacing */
+.md-typeset h2, .md-typeset h3, .md-typeset h4 {
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+
+/* Code blocks: slightly smaller and tighter */
+.md-typeset pre > code {
+  font-size: 0.9em;
+  line-height: 1.35;
+}
+
+/* Definition lists (used by mkdocstrings) spacing */
+dl {
+  margin-top: 0.6em;
+  margin-bottom: 0.6em;
+}
+dl > dt {
+  margin-top: 0.4em;
+}
+
+/* Reduce excessive top spacing around API sections */
+.md-content__inner {
+  padding-top: 0.6rem;
+}
+
+/* Table aesthetics */
+.md-typeset table:not([class]) {
+  font-size: 0.95em;
+}
+
