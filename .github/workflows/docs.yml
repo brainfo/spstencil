@@ -6,6 +6,38 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install package (editable)
+        run: uv pip install -e .
+
+      - name: Install docs deps
+        run: uv pip install mkdocs mkdocstrings[python]
+
+      - name: Sanity import
+        run: uv run python -c "import spstencil, inspect; print(spstencil.__version__, inspect.getfile(spstencil))"
+
+      - name: Deploy to GitHub Pages
+        run: uv run mkdocs gh-deploy --clean --force
+
+name: docs
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
   contents: read
   pages: write
   id-token: write

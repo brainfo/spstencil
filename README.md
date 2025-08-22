@@ -1,17 +1,19 @@
 ## spstencil
 
-Spatial transcriptomics tools for subsetting, splitting, aggregating, and cropping data.
+Spatial transcriptomics tools for subsetting, splitting, aggregating, and cropping adata/h5.
 
-Also, project/aggregate anndata to arbitrary polyline.
+Also, project/aggregate adata to arbitrary polyline.
 
 ### Install
 
 ```bash
 pip install -e .
 ```
-## API docs
+## docs
 
-[docs](https://brainfo.github.io/spstencil/)
+[API docs](https://brainfo.github.io/spstencil/)
+
+[Command docs](https://brainfo.github.io/spstencil/commands)
 
 ## Commands
 
