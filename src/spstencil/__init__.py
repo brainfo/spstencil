@@ -5,8 +5,8 @@ spstencil
 Spatial transcriptomics utilities for subsetting, splitting, aggregating, and cropping
 AnnData objects and related files.
 
-Top-level conveniences mirror a Scanpy-style API for quick access, while full
-functionality is organized under submodules `io`, `ops`, `st`, and `_utils`.
+You can import everything via the top-level too, e.g., `sps.load_anndata`, `sps.subset_by_values`, `sps.aggregate_st_by_cell_class`, etc.
+Full functionality is organized under submodules `io`, `ops`, `st`, and `_utils`.
 
 Example
 -------
