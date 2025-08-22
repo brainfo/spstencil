@@ -2,6 +2,8 @@
 
 Spatial transcriptomics tools for subsetting, splitting, aggregating, and cropping data.
 
+Also, project/aggregate anndata to arbitrary polyline.
+
 ### Install
 
 ```bash
