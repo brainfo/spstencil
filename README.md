@@ -11,8 +11,6 @@ pip install -e .
 ```
 ## docs
 
-I had done what claude did but both of us failed about this doc updates. it's not sync to the docs/index.md
-
 [API docs](https://brainfo.github.io/spstencil/)
 
 [Command docs](https://brainfo.github.io/spstencil/commands)
