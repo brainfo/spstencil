@@ -24,6 +24,7 @@ from . import ops as ops  # noqa: F401
 from . import st as st  # noqa: F401
 from ._utils import axes as axes  # noqa: F401
 from ._utils import cyx2yxc as cyx2yxc  # noqa: F401
+from . import project as project  # noqa: F401
 
 # Common, stable top-level functions
 from .io import load_anndata, save_anndata
@@ -53,6 +54,14 @@ from .st import (
     is_continuous,
     missing_ranges,
 )
+from .project import (
+    project_points_onto_polyline,
+    sample_curve,
+    extract_polyline_from_image,
+    unroll_adata_along_polyline,
+    unroll_sdata,
+    ProjectionResult,
+)
 
 __all__ = [
     # Submodules
@@ -61,6 +70,7 @@ __all__ = [
     "st",
     "axes",
     "cyx2yxc",
+    "project",
     # Version
     "__version__",
     # IO
@@ -90,6 +100,13 @@ __all__ = [
     "aggregate_hdf5_by_cell_class",
     "is_continuous",
     "missing_ranges",
+    # Unroll utilities
+    "project_points_onto_polyline",
+    "sample_curve",
+    "unroll_adata_along_polyline",
+    "extract_polyline_from_image",
+    "unroll_sdata",
+    "ProjectionResult",
 ]
 
 try:
