@@ -2,10 +2,36 @@ site_name: spstencil
 site_description: API reference for spstencil
 repo_url: https://github.com/brainfo/spstencil
 docs_dir: docs
+
 theme:
-  name: mkdocs
-extra_css:
-  - styles.css
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 plugins:
   - search
@@ -19,6 +45,8 @@ plugins:
             show_object_full_path: false
             show_category_heading: false
             members_order: alphabetical
+            show_signature_annotations: true
+            separate_signature: true
             filters:
               - "!^_"
             heading_level: 3
